@@ -2,16 +2,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Копируем package.json и package-lock.json (если есть)
+# Копируем package.json и устанавливаем зависимости
 COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
 
-# Устанавливаем зависимости
-RUN npm ci --only=production
-
-# Копируем код бота
+# Копируем код
 COPY telegram-crm-bot.js .
 
-# Создаём непривилегированного пользователя
+# Создаем непривилегированного пользователя
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
     chown -R nodejs:nodejs /app
