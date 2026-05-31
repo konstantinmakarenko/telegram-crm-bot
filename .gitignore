@@ -1,0 +1,7 @@
+node_modules
+npm-debug.log
+.env
+.git
+.dockerignore
+README.md
+bot-data/
