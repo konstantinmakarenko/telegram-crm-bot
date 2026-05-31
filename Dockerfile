@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Копируем package.json и устанавливаем зависимости
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Копируем код
 COPY telegram-crm-bot.js .
@@ -16,5 +16,4 @@ RUN addgroup -g 1001 -S nodejs && \
 
 USER nodejs
 
-# Запускаем бота
 CMD ["node", "telegram-crm-bot.js"]
