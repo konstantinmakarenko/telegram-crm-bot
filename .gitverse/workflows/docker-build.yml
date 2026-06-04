@@ -1,4 +1,4 @@
-name: Deploy to Docker Hub (kaniko)
+name: Deploy to Docker Hub
 
 on:
   push:
@@ -9,25 +9,33 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build and push with kaniko
+      - name: Prepare Kaniko credentials for Docker Hub
         run: |
-          docker run \
-            -v $(pwd):/workspace \
-            -v /tmp/kaniko_cache:/cache \
-            -e DOCKER_CONFIG=/workspace/.docker \
-            gcr.io/kaniko-project/executor:latest \
-            --dockerfile=/workspace/Dockerfile \
-            --context=/workspace \
-            --destination=docker.io/${{ vars.DOCKER_HUB_USERNAME }}/telegram-crm-bot:latest \
-            --destination=docker.io/${{ vars.DOCKER_HUB_USERNAME }}/telegram-crm-bot:${{ github.sha }} \
-            --cache=true \
-            --cache-dir=/cache
+          mkdir -p "${{ gitverse.workspace }}/.docker"
+          AUTH=$(echo -n "${{ vars.DOCKER_HUB_USERNAME }}:${{ secrets.DOCKER_HUB_PASSWORD }}" | base64 -w0)
+          cat > "${{ gitverse.workspace }}/.docker/config.json" <<EOF
+          {
+            "auths": {
+              "https://index.docker.io/v1/": {
+                "auth": "${AUTH}"
+              }
+            }
+          }
+          EOF
+          chmod 600 "${{ gitverse.workspace }}/.docker/config.json"
 
-      - name: Logout from Docker Hub
-        if: always()
-        run: docker logout
+      - name: Build and push with Kaniko
+        uses: docker://gcr.io/kaniko-project/executor:v1.24.0
+        env:
+          DOCKER_CONFIG: ${{ gitverse.workspace }}/.docker
+        with:
+          args: >-
+            --context=dir://${{ gitverse.workspace }}
+            --dockerfile=${{ gitverse.workspace }}/Dockerfile
+            --destination=docker.io/${{ vars.DOCKER_HUB_USERNAME }}/telegram-crm-bot:latest
+            --destination=docker.io/${{ vars.DOCKER_HUB_USERNAME }}/telegram-crm-bot:${{ github.sha }}
+            --cache=true
