@@ -4,9 +4,7 @@ services:
   - docker:dind
 
 variables:
-  DOCKER_IMAGE: $CI_REGISTRY_IMAGE  # используем GitLab Container Registry
-  # ИЛИ для Docker Hub:
-  # DOCKER_IMAGE: your-dockerhub-username/telegram-crm-bot
+  DOCKER_IMAGE: konstantinmakarenko/telegram-crm-bot
 
 stages:
   - build
