@@ -16,14 +16,18 @@ jobs:
       - name: Create Docker config.json for Docker Hub
         run: |
           mkdir -p "${{ gitverse.workspace }}/.docker"
-          # Получаем base64 от строки "username:password"
-          AUTH=$(echo -n "${{ vars.DOCKER_HUB_USERNAME }}:${{ secrets.DOCKER_HUB_PASSWORD }}" | base64 -w 0)
-          # Создаём JSON через jq (безопасно, без ручного экранирования)
-          echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"auth\":\"${AUTH}\"}}}" > "${{ gitverse.workspace }}/.docker/config.json"
-          # Альтернативный вариант через printf (если jq нет)
-          # printf '{"auths":{"https://index.docker.io/v1/":{"auth":"%s"}}}' "$AUTH" > "${{ gitverse.workspace }}/.docker/config.json"
+          # Создаём JSON вручную, экранируя кавычки
+          cat > "${{ gitverse.workspace }}/.docker/config.json" <<EOF
+          {
+            "auths": {
+              "https://index.docker.io/v1/": {
+                "auth": "$(echo -n "${{ vars.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }}" | base64 | tr -d '\n')"
+              }
+            }
+          }
+          EOF
           chmod 600 "${{ gitverse.workspace }}/.docker/config.json"
-          # Проверка: выводим содержимое (без пароля, только для отладки)
+          echo "Config file created:"
           cat "${{ gitverse.workspace }}/.docker/config.json"
 
       - name: Build and push with Kaniko
@@ -34,6 +38,6 @@ jobs:
           args: >-
             --context=dir://${{ gitverse.workspace }}
             --dockerfile=${{ gitverse.workspace }}/Dockerfile
-            --destination=docker.io/${{ vars.DOCKER_HUB_USERNAME }}/telegram-crm-bot:latest
-            --destination=docker.io/${{ vars.DOCKER_HUB_USERNAME }}/telegram-crm-bot:${{ github.sha }}
+            --destination=docker.io/${{ vars.DOCKER_USERNAME }}/telegram-crm-bot:latest
+            --destination=docker.io/${{ vars.DOCKER_USERNAME }}/telegram-crm-bot:${{ github.sha }}
             --cache=true
