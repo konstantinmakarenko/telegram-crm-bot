@@ -1,4 +1,3 @@
-// telegram-crm-bot.js
 // Telegram-бот для уведомлений о новых сделках из Bitrix24
 
 import { Bot } from 'grammy';

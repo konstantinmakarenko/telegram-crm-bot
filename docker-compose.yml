@@ -2,17 +2,11 @@ version: '3.8'
 
 services:
   telegram-crm-bot:
-    image: your-dockerhub-username/telegram-crm-bot:latest  # замени на свой!
+    image: konstantinmakarenko/telegram-crm-bot:latest
     container_name: telegram_crm_bot
     restart: unless-stopped
     env_file:
       - .env  # <-- переменные из .env попадут в контейнер
-    # или можно так:
-    # environment:
-    #   - BOT_TOKEN=${BOT_TOKEN}
-    #   - API_KEY=${API_KEY}
-    #   - BASE_URL=${BASE_URL}
-    #   - CHAT_ID=${CHAT_ID}
     volumes:
       - ./bot-data:/app/data
     deploy:
