@@ -6,7 +6,7 @@ services:
     container_name: telegram_crm_bot
     restart: unless-stopped
     env_file:
-      - .env  # <-- переменные из .env попадут в контейнер
+      - .env
     volumes:
       - ./bot-data:/app/data
     deploy:
