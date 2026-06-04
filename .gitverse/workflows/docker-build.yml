@@ -1,0 +1,28 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ vars.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -t konstantinmakarenko/telegram-crm-bot:latest .
+          docker tag konstantinmakarenko/telegram-crm-bot:latest konstantinmakarenko/telegram-crm-bot:${{ github.sha }}
+
+      - name: Push Docker image
+        run: |
+          docker push konstantinmakarenko/telegram-crm-bot:latest
+          docker push konstantinmakarenko/telegram-crm-bot:${{ github.sha }}
