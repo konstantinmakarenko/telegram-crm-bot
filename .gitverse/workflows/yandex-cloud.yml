@@ -1,4 +1,4 @@
-name: Deploy to Yandex Cloud Registry
+name: Deploy to Yandex Cloud Registry (kaniko)
 
 on:
   push:
@@ -14,19 +14,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Yandex Cloud Registry
+      - name: Login to Yandex Cloud Registry
         run: |
           echo "${{ secrets.YC_TOKEN }}" | docker login \
             --username oauth \
             --password-stdin \
             cr.yandex
 
-      - name: Build Docker image
-        run: |
-          docker build -t cr.yandex/${{ secrets.YC_REGISTRY_ID }}/telegram-crm-bot:latest .
-          docker build -t cr.yandex/${{ secrets.YC_REGISTRY_ID }}/telegram-crm-bot:${{ github.sha }} .
-
-      - name: Push to Yandex Cloud Registry
-        run: |
-          docker push cr.yandex/${{ secrets.YC_REGISTRY_ID }}/telegram-crm-bot:latest
-          docker push cr.yandex/${{ secrets.YC_REGISTRY_ID }}/telegram-crm-bot:${{ github.sha }}
+      - name: Build and push with kaniko
+        uses: aevea/kaniko@master
+        with:
+          registry: cr.yandex
+          repository: ${{ secrets.YC_REGISTRY_ID }}/telegram-crm-bot
+          username: oauth
+          password: ${{ secrets.YC_TOKEN }}
+          tag_with_latest: true
+          tag: ${{ github.sha }}
+          cache: true

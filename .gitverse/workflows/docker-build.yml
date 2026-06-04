@@ -1,9 +1,10 @@
-name: Docker Build and Push
+name: Deploy to Docker Hub (kaniko)
 
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -13,16 +14,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ vars.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build Docker image
-        run: |
-          docker build -t konstantinmakarenko/telegram-crm-bot:latest .
-          docker tag konstantinmakarenko/telegram-crm-bot:latest konstantinmakarenko/telegram-crm-bot:${{ github.sha }}
-
-      - name: Push Docker image
-        run: |
-          docker push konstantinmakarenko/telegram-crm-bot:latest
-          docker push konstantinmakarenko/telegram-crm-bot:${{ github.sha }}
+      - name: Build and push with kaniko
+        uses: aevea/kaniko@master
+        with:
+          registry: docker.io
+          repository: ${{ vars.DOCKER_USERNAME }}/telegram-crm-bot
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tag_with_latest: true
+          tag: ${{ github.sha }}
+          cache: true
